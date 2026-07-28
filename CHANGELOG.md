@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0
+
+### Added
+
+- **Monorepo packages get their own group.** Packages from your own repository are dependencies, so they used to sort next to `react` and `lodash` even though they are your code. They now sit between third-party libraries and the aliases of the package being edited. Membership is detected from a `workspace:` version range, a root `workspaces` field, or `pnpm-workspace.yaml`, so nothing needs configuring.
+- `sortImportsDetectWorkspace` (default `true`) turns that off, restoring the 1.0.0 behaviour.
+
+### Changed
+
+- In a monorepo, imports of your own packages move to the new group. This is a one-time reordering; projects that are not monorepos are unaffected.
+
+### Fixed
+
+- Corrected an inaccurate claim in the 1.0.0 notes. The previous plugin did **not** fail to load on Prettier 3: the legacy `prettier/parser-*` specifiers are still aliased in the 3.x export map and resolve fine. The fallback loader added in 1.0.0 is still worthwhile, since those aliases are legacy, but Prettier 3 was never broken for the old plugin.
+
 ## 1.0.0
 
 Renamed from `prettier-plugin-sort-react-imports`. The engine was rewritten on top of a real parser, which fixes a class of bugs the previous line-by-line regex approach could not.
@@ -22,7 +37,7 @@ Renamed from `prettier-plugin-sort-react-imports`. The engine was rewritten on t
 - Leading comments such as `// eslint-disable-next-line` stayed behind and reattached to a different import.
 - With prettier's default `semi: true`, default, namespace and side-effect imports were not sorted at all.
 - `export { x } from '…'` between imports was hoisted above them.
-- The plugin failed to load on Prettier 3, whose bundled parser paths differ from Prettier 2's.
+- Parser loading no longer depends on Prettier 2's `prettier/parser-*` paths alone. Those are still aliased in Prettier 3 today, so the old code did work there, but the aliases are legacy and the plugin now resolves `prettier/plugins/*` first and falls back.
 - A tsconfig containing comments or trailing commas caused every alias to be silently ignored.
 - Priority packages were matched by substring, which promoted `preact`, `next-auth`, `nextra` and `@testing-library/react`.
 - A specifier whose name begins with `from`, such as `fromPairs`, corrupted the parsed module path.
@@ -32,7 +47,7 @@ Renamed from `prettier-plugin-sort-react-imports`. The engine was rewritten on t
 
 ### Added
 
-- Prettier 3 support, alongside Prettier 2.3+.
+- Prettier 3 is now supported explicitly and covered by CI, alongside Prettier 2.3+.
 - Plugin options: `sortImportsPreset`, `sortImportsGroups`, `sortImportsPriorityPackages`, `sortImportsAliases`, `sortImportsSpecifierOrder`, `sortImportsSeparator`, `sortImportsRemoveUnused`, `sortImportsIgnorePragma`.
 - Framework presets for React, Next.js, NestJS, Vue, Nuxt, Svelte, Angular and plain Node, detected automatically from the nearest `package.json`.
 - Optional removal of unused imports, off by default, with safety gates for decorators, declaration files, ambient augmentation and single-file components.

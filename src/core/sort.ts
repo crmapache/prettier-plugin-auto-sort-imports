@@ -67,6 +67,7 @@ export function sortGroup(
   switch (id) {
     case 'library':
       return sortLibraries(imports, options)
+    case 'workspace':
     case 'alias':
       return imports.slice().sort(byDepthAsc)
     case 'relative':

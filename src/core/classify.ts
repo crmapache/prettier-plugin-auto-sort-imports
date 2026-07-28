@@ -54,6 +54,7 @@ export function classify(entry: ParsedImport, options: ResolvedOptions): ImportG
   if (alias) return 'alias'
   if (isRelative(source)) return 'relative'
   if (isBuiltin(source)) return 'builtin'
+  if (options.workspacePackages.has(packageName(source))) return 'workspace'
   return 'library'
 }
 

@@ -9,6 +9,10 @@ export const DEFAULT_GROUPS: ImportGroupId[] = [
   'polyfill',
   'builtin',
   'library',
+  // Your own packages sit between third-party code and the aliases of the
+  // package currently being edited - closer to home than a registry dependency,
+  // further than a local file.
+  'workspace',
   'alias',
   'relative',
   'side-effect',
