@@ -1,0 +1,33 @@
+{
+  "name": "prettier-plugin-sort-react-imports",
+  "version": "0.7.0",
+  "description": "Moved to prettier-plugin-auto-sort-imports. This package re-exports it so existing setups keep working.",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "sort-imports",
+    "deprecated"
+  ],
+  "author": {
+    "name": "Maksim Zolotoi",
+    "email": "crmapache@icloud.com",
+    "url": "https://github.com/crmapache"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crmapache/prettier-plugin-auto-sort-imports.git"
+  },
+  "homepage": "https://github.com/crmapache/prettier-plugin-auto-sort-imports#readme",
+  "license": "MIT",
+  "dependencies": {
+    "prettier-plugin-auto-sort-imports": "^1.0.0"
+  },
+  "peerDependencies": {
+    "prettier": "^2.3.0 || ^3.0.0"
+  }
+}

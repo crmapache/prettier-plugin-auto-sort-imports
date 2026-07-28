@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    // JSONC on purpose: comments and a trailing comma must not break alias discovery
+    "baseUrl": ".",
+    "paths": {
+      "@core/*": ["src/core/*"],
+      "~/*": ["src/*"],
+      "components/*": ["src/components/*"],
+    },
+  }
+}
