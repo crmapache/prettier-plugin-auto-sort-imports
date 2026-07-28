@@ -2,10 +2,20 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "esModuleInterop": true,
     "module": "CommonJS",
-    "target": "ES6"
+    "moduleResolution": "node",
+    "target": "ES2019",
+    "lib": ["ES2019"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+  "exclude": ["node_modules", "dist", "tests"]
 }

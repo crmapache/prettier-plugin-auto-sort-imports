@@ -1,21 +1,52 @@
 {
-  "name": "prettier-plugin-sort-react-imports",
-  "version": "0.6.1",
-  "description": "A prettier plugins for sorting and grouping your imports in react apps",
+  "name": "prettier-plugin-auto-sort-imports",
+  "version": "1.0.0",
+  "description": "Zero-config Prettier plugin that sorts and groups imports with blank lines between groups. Discovers your tsconfig/jsconfig path aliases automatically - no regex configuration. Works with TypeScript and JavaScript, frontend and backend.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run clean && npm run typecheck && npm test"
   },
   "keywords": [
     "prettier",
+    "prettier-plugin",
     "plugin",
     "sort",
-    "import",
+    "sort-imports",
+    "import-order",
+    "organize-imports",
+    "imports",
+    "formatting",
+    "typescript",
+    "javascript",
     "react",
     "next",
-    "typescript",
-    "javascript"
+    "vue",
+    "nuxt",
+    "svelte",
+    "nestjs",
+    "node",
+    "monorepo"
   ],
   "author": {
     "name": "Maksim Zolotoi",
@@ -23,17 +54,27 @@
     "url": "https://github.com/crmapache"
   },
   "repository": {
-    "url": "https://github.com/crmapache/prettier-plugin-sort-next-imports",
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/crmapache/prettier-plugin-auto-sort-imports.git"
   },
-  "license": "ISC",
+  "homepage": "https://github.com/crmapache/prettier-plugin-auto-sort-imports#readme",
+  "bugs": {
+    "url": "https://github.com/crmapache/prettier-plugin-auto-sort-imports/issues"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.17"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0"
+  },
+  "peerDependencies": {
+    "prettier": "^2.3.0 || ^3.0.0"
+  },
   "devDependencies": {
-    "@babel/parser": "^7.22.4",
-    "@babel/plugin-syntax-jsx": "^7.21.4",
-    "@babel/traverse": "^7.22.4",
     "@types/node": "^20.10.3",
     "prettier": "2.8.8",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.3",
+    "vitest": "^1.6.0"
   }
 }

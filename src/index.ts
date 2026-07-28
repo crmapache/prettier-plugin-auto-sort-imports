@@ -1,17 +1,10 @@
-import { parsers as javascriptParsers } from 'prettier/parser-babel'
-import { parsers as typescriptParsers } from 'prettier/parser-typescript'
+import { options } from './options'
+import { parsers } from './parsers'
 
-import { preprocess } from './preprocess'
+export { options, parsers }
+export { sortImports } from './preprocess'
 
-module.exports = {
-  parsers: {
-    typescript: {
-      ...typescriptParsers.typescript,
-      preprocess,
-    },
-    babel: {
-      ...javascriptParsers.babel,
-      preprocess,
-    },
-  },
-}
+// Prettier 2 reads the named exports off `require()`; prettier 3 imports the
+// module and falls back to `default`. Providing both keeps one build working
+// on either version.
+export default { options, parsers }

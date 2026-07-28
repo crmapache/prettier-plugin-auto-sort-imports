@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: node ${{ matrix.node }} / prettier ${{ matrix.prettier }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+        prettier: ['2.8.8', '3']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - run: npm ci
+
+      # The plugin supports both prettier majors, so both are exercised.
+      - run: npm install --no-save prettier@${{ matrix.prettier }}
+
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npx vitest run
+
+  package:
+    name: package contents
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # Guards against shipping sources, fixtures or stale build output again.
+      - name: Verify the tarball contains only what it should
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e "
+            const files = require('./pack.json')[0].files.map(f => f.path).sort();
+            const unexpected = files.filter(f => !/^(dist\/|package\.json$|README\.md$|LICENSE$)/.test(f));
+            if (unexpected.length) {
+              console.error('Unexpected files in tarball:\n' + unexpected.join('\n'));
+              process.exit(1);
+            }
+            console.log('Tarball OK, ' + files.length + ' files.');
+          "
