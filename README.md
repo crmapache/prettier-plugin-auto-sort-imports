@@ -13,12 +13,13 @@ It reads your `tsconfig.json` / `jsconfig.json` and works out which imports are 
 
 The popular plugins make you choose between control and convenience:
 
-|                                        | **auto-sort-imports** | @trivago/…sort-imports | @ianvs/…sort-imports | …organize-imports |
-| -------------------------------------- | --------------------- | ---------------------- | -------------------- | ----------------- |
+|                                         | **auto-sort-imports** | @trivago/…sort-imports | @ianvs/…sort-imports | …organize-imports |
+| --------------------------------------- | --------------------- | ---------------------- | -------------------- | ----------------- |
 | Works with zero configuration           | **Yes**               | No                     | No                   | Yes               |
 | Requires hand-written regexes           | **No**                | Yes                    | Yes                  | No                |
 | Blank lines between groups              | **Yes**               | Yes                    | Yes                  | No                |
 | Finds your aliases from tsconfig itself | **Yes**               | No                     | No                   | No                |
+| Groups your monorepo packages           | **Yes**               | No                     | No                   | No                |
 | Needs TypeScript installed              | **No**                | No                     | No                   | Yes               |
 | Removes unused imports                  | **Opt-in**            | No                     | No                   | Always            |
 | Prettier 2 and 3                        | **Both**              | Both                   | Both                 | Both              |
@@ -95,11 +96,34 @@ Imports are placed into these groups, in this order:
 | `polyfill`    | Bare side-effect imports such as `reflect-metadata` or `zone.js`      |
 | `builtin`     | Node builtins: `node:fs`, `path`, `crypto`                            |
 | `library`     | npm packages, including scoped ones like `@mui/material`              |
+| `workspace`   | Packages from your own monorepo                                       |
 | `alias`       | Your own path aliases from tsconfig/jsconfig                          |
 | `relative`    | `./foo`, `../bar`                                                     |
 | `side-effect` | Style and asset imports such as `import './styles.css'`               |
 
 Side-effect imports are never reordered relative to one another, because their order is part of how your program runs.
+
+## Monorepos
+
+Packages from your own repository are dependencies, so by default they would sort next to `react` and `lodash` even though they are your code. They get their own group instead, between third-party libraries and the aliases of the package you are editing:
+
+```javascript
+import { useState } from 'react'
+import * as Yup from 'yup'
+
+import { Button } from '@acme/ui'
+import { api } from '@acme/api-client'
+
+import { TextField } from '@/components/TextField'
+```
+
+Membership is detected from whichever of these your setup uses, so there is nothing to configure:
+
+- a `workspace:` version range in `package.json` (pnpm, yarn berry, bun)
+- a `workspaces` field in the repository root `package.json` (npm, yarn classic)
+- `pnpm-workspace.yaml`
+
+Aliases are resolved from the tsconfig nearest to the file being formatted, so each package in the monorepo gets its own. Set `sortImportsDetectWorkspace: false` to sort workspace packages among the libraries instead.
 
 ## Frameworks
 
@@ -119,6 +143,7 @@ Everything is optional.
 | `sortImportsAliases`          | array of alias prefixes                         | `[]`                  |
 | `sortImportsSpecifierOrder`   | `length` \| `alphabetical` \| `none`            | `length`              |
 | `sortImportsSeparator`        | boolean                                         | `true`                |
+| `sortImportsDetectWorkspace`  | boolean                                         | `true`                |
 | `sortImportsRemoveUnused`     | boolean                                         | `false`               |
 | `sortImportsIgnorePragma`     | string                                          | `@sort-imports-ignore` |
 

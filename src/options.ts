@@ -3,6 +3,7 @@ import path from 'path'
 import { DEFAULT_GROUPS, PRESETS, detectPreset } from './presets'
 import { resolveAliases } from './resolve/aliases'
 import { findDependencies } from './resolve/package-info'
+import { findWorkspacePackages } from './resolve/workspace'
 import type { ImportGroupId, PresetName, ResolvedOptions, SpecifierOrder } from './types'
 
 /** Prettier option declarations, surfaced in `prettier --help` and editor UIs. */
@@ -66,6 +67,13 @@ export const options = {
     default: true,
     description: 'Insert a blank line between import groups.',
   },
+  sortImportsDetectWorkspace: {
+    type: 'boolean' as const,
+    category: 'AutoSortImports',
+    default: true,
+    description:
+      'Give packages from this repository their own group. Detected from the workspace protocol, a "workspaces" field or pnpm-workspace.yaml. Turn off to sort them among third-party libraries.',
+  },
   sortImportsRemoveUnused: {
     type: 'boolean' as const,
     category: 'AutoSortImports',
@@ -92,6 +100,7 @@ interface PrettierOptionsLike {
   sortImportsAliases?: string[]
   sortImportsSpecifierOrder?: SpecifierOrder
   sortImportsSeparator?: boolean
+  sortImportsDetectWorkspace?: boolean
   sortImportsRemoveUnused?: boolean
   sortImportsIgnorePragma?: string
 }
@@ -131,6 +140,10 @@ export function resolveOptions(raw: PrettierOptionsLike | undefined): ResolvedOp
     groups: [...groups, ...DEFAULT_GROUPS.filter((group) => !groups.includes(group))],
     priorityPackages: requestedPriority.length > 0 ? requestedPriority : preset.priorityPackages,
     aliases: resolveAliases(fileDir, asArray(raw?.sortImportsAliases)),
+    workspacePackages:
+      raw?.sortImportsDetectWorkspace === false || !fileDir
+        ? new Set<string>()
+        : findWorkspacePackages(fileDir),
     specifierOrder:
       specifierOrder && VALID_SPECIFIER_ORDERS.has(specifierOrder) ? specifierOrder : 'length',
     separator: raw?.sortImportsSeparator !== false,

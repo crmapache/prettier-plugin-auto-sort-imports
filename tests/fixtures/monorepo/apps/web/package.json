@@ -1,0 +1,8 @@
+{
+  "name": "@fixture/web",
+  "dependencies": {
+    "react": "^18.0.0",
+    "@fixture/ui": "workspace:*",
+    "@fixture/contract": "workspace:*"
+  }
+}

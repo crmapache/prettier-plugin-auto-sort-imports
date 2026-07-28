@@ -7,9 +7,9 @@ export interface ParserLike {
 
 /**
  * Prettier 3 moved its bundled parsers from `prettier/parser-*` to
- * `prettier/plugins/*`, and later 3.x releases dropped the old aliases entirely.
- * Requiring the v2 paths is what made this plugin fail to load on Prettier 3,
- * so both layouts are tried and whichever resolves wins.
+ * `prettier/plugins/*`. The old specifiers are still aliased in the 3.x export
+ * map, but they are legacy, so the current layout is tried first and the v2
+ * paths are only a fallback.
  */
 const PARSER_MODULES: Array<[string, string]> = [
   ['prettier/plugins/babel', 'prettier/parser-babel'],

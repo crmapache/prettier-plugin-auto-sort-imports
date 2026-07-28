@@ -6,6 +6,7 @@ export type ImportGroupId =
   | 'polyfill'
   | 'builtin'
   | 'library'
+  | 'workspace'
   | 'alias'
   | 'relative'
   | 'side-effect'
@@ -91,6 +92,8 @@ export interface ResolvedOptions {
   groups: ImportGroupId[]
   priorityPackages: string[]
   aliases: string[]
+  /** Packages that live in this repository rather than in the registry. */
+  workspacePackages: Set<string>
   specifierOrder: SpecifierOrder
   separator: boolean
   removeUnused: boolean

@@ -62,6 +62,22 @@ None of these are subtle bugs in the logic. They are all the same bug: a regex d
 
 The other thing I would do differently from the start: the build output was committed to git. A feature I added months earlier had never actually reached anyone, because the published build predated it. `dist` is gitignored now and `prepublishOnly` rebuilds and tests, so that particular failure cannot happen twice.
 
+### Monorepos get the same treatment
+
+The same idea extends one step further. In a monorepo, your own packages are dependencies, so every sorter puts `@acme/ui` next to `react` and `lodash`. But it is your code, and the information saying so is already there - a `workspace:` range, a `workspaces` field, a `pnpm-workspace.yaml`. So it gets its own group:
+
+```javascript
+import { useState } from 'react'
+import * as Yup from 'yup'
+
+import { Button } from '@acme/ui'
+import { api } from '@acme/api-client'
+
+import { TextField } from '@/components/TextField'
+```
+
+Aliases are resolved from the tsconfig nearest to the file, so each package in the repo gets its own set. Again, nothing to configure.
+
 ### If you want to try it
 
 ```shell
