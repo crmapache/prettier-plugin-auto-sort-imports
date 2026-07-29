@@ -9,6 +9,10 @@ export const DEFAULT_GROUPS: ImportGroupId[] = [
   'polyfill',
   'builtin',
   'library',
+  // Scoped registry packages read as a set - a design system, a query library,
+  // a component kit - so they get their own block rather than being interleaved
+  // with the unscoped ones.
+  'scoped',
   // Your own packages sit between third-party code and the aliases of the
   // package currently being edited - closer to home than a registry dependency,
   // further than a local file.

@@ -67,6 +67,13 @@ export const options = {
     default: true,
     description: 'Insert a blank line between import groups.',
   },
+  sortImportsGroupScoped: {
+    type: 'boolean' as const,
+    category: 'AutoSortImports',
+    default: true,
+    description:
+      'Give third-party scoped packages such as @mui/material their own group. Turn off to sort them among the unscoped libraries.',
+  },
   sortImportsDetectWorkspace: {
     type: 'boolean' as const,
     category: 'AutoSortImports',
@@ -100,6 +107,7 @@ interface PrettierOptionsLike {
   sortImportsAliases?: string[]
   sortImportsSpecifierOrder?: SpecifierOrder
   sortImportsSeparator?: boolean
+  sortImportsGroupScoped?: boolean
   sortImportsDetectWorkspace?: boolean
   sortImportsRemoveUnused?: boolean
   sortImportsIgnorePragma?: string
@@ -144,6 +152,7 @@ export function resolveOptions(raw: PrettierOptionsLike | undefined): ResolvedOp
       raw?.sortImportsDetectWorkspace === false || !fileDir
         ? new Set<string>()
         : findWorkspacePackages(fileDir),
+    groupScoped: raw?.sortImportsGroupScoped !== false,
     specifierOrder:
       specifierOrder && VALID_SPECIFIER_ORDERS.has(specifierOrder) ? specifierOrder : 'length',
     separator: raw?.sortImportsSeparator !== false,

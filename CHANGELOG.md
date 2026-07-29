@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0
+
+### Fixed
+
+- **A scope is no longer counted as a path level.** `@mui/material` is one package with no subpath, but depth was measured by counting slashes, so it ranked alongside `lodash/debounce` instead of alongside `axios`. Scoped packages were scattered through the middle of the library group as a result. Depth is now measured from the package name: `@mui/material` is depth 1, `@mui/material/styles` and `lodash/debounce` are depth 2. Relative paths still count every slash, which is correct for them.
+
+### Added
+
+- **Scoped packages get their own group**, between the unscoped libraries and your workspace packages. This restores the tidy block that 0.6.x produced by accident - back then every `@`-prefixed specifier was misclassified as an internal alias, which grouped them nicely but broke real alias handling. It is now a deliberate group rather than a side effect of a bug.
+- `sortImportsGroupScoped` (default `true`) turns that off, sorting scoped packages among the unscoped ones.
+
+### Changed
+
+- A package pinned via `sortImportsPriorityPackages` stays in the library group even when scoped. Without this, the scoped group would swallow `@nestjs/common` and `@angular/core` and undo the ordering their presets exist to provide.
+
 ## 1.1.1
 
 ### Fixed

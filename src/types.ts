@@ -6,6 +6,7 @@ export type ImportGroupId =
   | 'polyfill'
   | 'builtin'
   | 'library'
+  | 'scoped'
   | 'workspace'
   | 'alias'
   | 'relative'
@@ -94,6 +95,8 @@ export interface ResolvedOptions {
   aliases: string[]
   /** Packages that live in this repository rather than in the registry. */
   workspacePackages: Set<string>
+  /** Give third-party scoped packages a block of their own. */
+  groupScoped: boolean
   specifierOrder: SpecifierOrder
   separator: boolean
   removeUnused: boolean

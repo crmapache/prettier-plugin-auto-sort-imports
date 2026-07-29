@@ -272,6 +272,89 @@ describe('backend and framework coverage', () => {
   })
 })
 
+describe('scoped packages and package depth', () => {
+  it('a scope is not counted as a path level', () => {
+    // `@mui/material` is one package with no subpath. Counting raw slashes put
+    // it on a par with `lodash/debounce` and scattered scoped packages through
+    // the middle of the list.
+    const code = [
+      "import { Button } from '@mui/material'",
+      "import { styled } from '@mui/material/styles'",
+      "import { useQuery } from '@tanstack/react-query'",
+      '',
+      'export default [Button, styled, useQuery]',
+      '',
+    ].join('\n')
+    const out = react(code)
+
+    // Depth 1 entries first, alphabetically; the subpath import goes last.
+    expect(out.indexOf("from '@mui/material'")).toBeLessThan(out.indexOf('@tanstack/react-query'))
+    expect(out.indexOf('@tanstack/react-query')).toBeLessThan(out.indexOf('@mui/material/styles'))
+  })
+
+  it('scoped packages form their own block below the unscoped ones', () => {
+    const code = [
+      "import { Button } from '@mui/material'",
+      "import axios from 'axios'",
+      "import debounce from 'lodash/debounce'",
+      '',
+      'export default [Button, axios, debounce]',
+      '',
+    ].join('\n')
+
+    expect(react(code)).toBe(
+      [
+        "import axios from 'axios'",
+        "import debounce from 'lodash/debounce'",
+        '',
+        "import { Button } from '@mui/material'",
+        '',
+        'export default [Button, axios, debounce]',
+        '',
+      ].join('\n'),
+    )
+  })
+
+  it('a pinned package stays with the libraries even when scoped', () => {
+    // Otherwise the scoped group would swallow @nestjs/common and undo the
+    // ordering the preset exists to provide.
+    const code = [
+      "import { Repository } from 'typeorm'",
+      "import { Injectable } from '@nestjs/common'",
+      '',
+      'export class A {}',
+      '',
+    ].join('\n')
+    const out = sortImports(code, { filepath: NEST_FILE, parser: 'typescript' })
+
+    expect(out.indexOf('@nestjs/common')).toBeLessThan(out.indexOf('typeorm'))
+  })
+
+  it('sortImportsGroupScoped: false keeps them among the libraries', () => {
+    const code =
+      "import { Button } from '@mui/material'\nimport axios from 'axios'\n\nexport default [Button, axios]\n"
+
+    expect(react(code, { sortImportsGroupScoped: false })).toBe(
+      "import { Button } from '@mui/material'\nimport axios from 'axios'\n\nexport default [Button, axios]\n",
+    )
+  })
+
+  it('relative imports still count every slash', () => {
+    const code = [
+      "import { a } from './a'",
+      "import { deep } from '../../deep/nested/thing'",
+      "import { b } from '../b'",
+      '',
+      'export default [a, deep, b]',
+      '',
+    ].join('\n')
+    const out = react(code)
+
+    expect(out.indexOf('../../deep/nested/thing')).toBeLessThan(out.indexOf("'../b'"))
+    expect(out.indexOf("'../b'")).toBeLessThan(out.indexOf("'./a'"))
+  })
+})
+
 describe('options', () => {
   it('sortImportsSeparator: false removes the blank lines between groups', () => {
     const code = "import a from './a'\nimport z from 'zzz'\n\nexport default [a, z]\n"

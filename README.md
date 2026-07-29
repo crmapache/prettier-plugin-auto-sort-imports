@@ -95,11 +95,14 @@ Imports are placed into these groups, in this order:
 | ------------- | -------------------------------------------------------------------- |
 | `polyfill`    | Bare side-effect imports such as `reflect-metadata` or `zone.js`      |
 | `builtin`     | Node builtins: `node:fs`, `path`, `crypto`                            |
-| `library`     | npm packages, including scoped ones like `@mui/material`              |
+| `library`     | Unscoped npm packages, plus any package you pinned as a priority      |
+| `scoped`      | Scoped npm packages such as `@mui/material`                           |
 | `workspace`   | Packages from your own monorepo                                       |
 | `alias`       | Your own path aliases from tsconfig/jsconfig                          |
 | `relative`    | `./foo`, `../bar`                                                     |
 | `side-effect` | Style and asset imports such as `import './styles.css'`               |
+
+Within a group, packages are ordered by depth and then alphabetically. Depth is measured from the package name, so `@mui/material` ranks alongside `axios` rather than alongside `lodash/debounce` - a scope is part of the name, not a folder level. Relative paths count every slash, so `../../deep` comes before `../shallow`.
 
 Side-effect imports are never reordered relative to one another, because their order is part of how your program runs.
 
@@ -143,6 +146,7 @@ Everything is optional.
 | `sortImportsAliases`          | array of alias prefixes                         | `[]`                  |
 | `sortImportsSpecifierOrder`   | `length` \| `alphabetical` \| `none`            | `length`              |
 | `sortImportsSeparator`        | boolean                                         | `true`                |
+| `sortImportsGroupScoped`      | boolean                                         | `true`                |
 | `sortImportsDetectWorkspace`  | boolean                                         | `true`                |
 | `sortImportsRemoveUnused`     | boolean                                         | `false`               |
 | `sortImportsIgnorePragma`     | string                                          | `@sort-imports-ignore` |
