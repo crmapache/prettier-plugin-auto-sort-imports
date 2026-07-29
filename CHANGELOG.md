@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.1
+
+### Fixed
+
+- **`sortImportsRemoveUnused` produced invalid code** when an import had only named bindings and some of them were unused. Rebuilding the clause was anchored on the first name, which sits *after* the opening brace, so the original `{` was left in place and a second one was emitted: `import { { withCost, DEFAULT_LIMIT } from './metrics'`. Prettier then refused to format the file. Imports with a default or namespace binding were unaffected, which is why it went unnoticed.
+
+### Added
+
+- The unused-import path now verifies its own output. Rewriting a clause is the only thing this plugin does that edits a statement rather than moving it, so the result is re-parsed before being returned; if it does not parse, the file is left exactly as it came in. A defect there can no longer do worse than nothing.
+- The full invariant corpus is replayed with `sortImportsRemoveUnused` enabled, asserting that the output parses, that no binding is added or altered, that side-effect imports are never removed, and that formatting stays idempotent. The option had never been exercised by those tests, which is how the bug above shipped.
+
 ## 1.1.0
 
 ### Added

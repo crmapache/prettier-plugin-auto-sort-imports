@@ -1,6 +1,6 @@
 import { groupImports } from './core/classify'
 import { hasIgnorePragma } from './core/ignore'
-import { parseImports } from './core/parse-imports'
+import { isParseable, parseImports } from './core/parse-imports'
 import { assemble, printGroups } from './core/print'
 import { sortGroup } from './core/sort'
 import { canRemoveUnused, findUnusedBindings, pruneImport } from './core/unused'
@@ -27,11 +27,14 @@ export function sortImports(code: string, rawOptions?: unknown): string {
     const { block } = parsed
 
     let entries = block.imports
+    let rewroteImports = false
+
     if (options.removeUnused && canRemoveUnused(parsed, code, filepath)) {
       const unused = findUnusedBindings(parsed, code)
-      entries = entries
-        .map((entry) => pruneImport(entry, unused))
-        .filter((entry): entry is ParsedImport => entry !== null)
+      const pruned = entries.map((entry) => pruneImport(entry, unused))
+      // pruneImport hands back the same object when it changes nothing.
+      rewroteImports = pruned.some((entry, i) => entry !== entries[i])
+      entries = pruned.filter((entry): entry is ParsedImport => entry !== null)
     }
 
     // Every import turned out to be unused: the block disappears entirely.
@@ -49,7 +52,13 @@ export function sortImports(code: string, rawOptions?: unknown): string {
     const printed = printGroups(sorted, options.groups, options)
     if (printed.trim() === '') return code
 
-    return assemble(block.header, printed, block.tail)
+    const result = assemble(block.header, printed, block.tail)
+
+    // Only the unused-import path edits statements rather than moving them, so
+    // that is the only path whose output needs verifying.
+    if (rewroteImports && !isParseable(result, filepath, prettierOptions?.parser)) return code
+
+    return result
   } catch {
     return code
   }
