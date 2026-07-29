@@ -18,6 +18,22 @@ export function packageName(source: string): string {
   return parts[0] ?? source
 }
 
+/**
+ * Position in the priority list, or the list length when absent.
+ *
+ * Whole-name matching only. Substring matching used to promote `preact`,
+ * `next-auth` and `@testing-library/react` alongside the real thing.
+ */
+export function priorityRank(source: string, priorityPackages: string[]): number {
+  const name = packageName(source)
+  for (let i = 0; i < priorityPackages.length; i++) {
+    const entry = priorityPackages[i]
+    if (!entry) continue
+    if (source === entry || name === entry || source.startsWith(`${entry}/`)) return i
+  }
+  return priorityPackages.length
+}
+
 function isRelative(source: string): boolean {
   return source.startsWith('.')
 }
@@ -54,7 +70,17 @@ export function classify(entry: ParsedImport, options: ResolvedOptions): ImportG
   if (alias) return 'alias'
   if (isRelative(source)) return 'relative'
   if (isBuiltin(source)) return 'builtin'
+  // Workspace packages are usually scoped too, so they have to be claimed first.
   if (options.workspacePackages.has(packageName(source))) return 'workspace'
+
+  // A pinned package stays with the libraries even when scoped, otherwise the
+  // scoped group would swallow `@nestjs/common` and `@angular/core` and undo
+  // the very ordering the preset exists to provide.
+  const isPinned = priorityRank(source, options.priorityPackages) < options.priorityPackages.length
+  if (options.groupScoped && !isPinned && source.startsWith('@') && source.includes('/')) {
+    return 'scoped'
+  }
+
   return 'library'
 }
 

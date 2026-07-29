@@ -64,20 +64,37 @@ describe('workspace packages', () => {
     expect(out.indexOf('@fixture/ui')).toBeLessThan(out.indexOf('@/components/TextField'))
   })
 
-  it('sortImportsDetectWorkspace: false sorts them among the libraries again', () => {
+  it('sortImportsDetectWorkspace: false demotes them to the scoped group', () => {
     const code =
       "import { Button } from '@fixture/ui'\nimport aaa from 'aaa'\n\nexport default [Button, aaa]\n"
     const out = format(code, PNPM_FILE, { sortImportsDetectWorkspace: false })
 
-    expect(out).toBe("import aaa from 'aaa'\nimport { Button } from '@fixture/ui'\n\nexport default [Button, aaa]\n")
+    expect(out).toBe(
+      "import aaa from 'aaa'\n\nimport { Button } from '@fixture/ui'\n\nexport default [Button, aaa]\n",
+    )
   })
 
-  it('changes nothing in a project that is not a monorepo', () => {
+  it('with both detections off they sort among the libraries', () => {
+    const code =
+      "import { Button } from '@fixture/ui'\nimport aaa from 'aaa'\n\nexport default [Button, aaa]\n"
+    const out = format(code, PNPM_FILE, {
+      sortImportsDetectWorkspace: false,
+      sortImportsGroupScoped: false,
+    })
+
+    expect(out).toBe(
+      "import { Button } from '@fixture/ui'\nimport aaa from 'aaa'\n\nexport default [Button, aaa]\n",
+    )
+  })
+
+  it('a scoped registry package is not mistaken for a workspace one', () => {
     const code =
       "import { Button } from '@mui/material'\nimport aaa from 'aaa'\n\nexport default [Button, aaa]\n"
     const out = sortImports(code, { filepath: REACT_FILE, parser: 'typescript' })
 
-    expect(out).toBe("import aaa from 'aaa'\nimport { Button } from '@mui/material'\n\nexport default [Button, aaa]\n")
+    expect(out).toBe(
+      "import aaa from 'aaa'\n\nimport { Button } from '@mui/material'\n\nexport default [Button, aaa]\n",
+    )
   })
 
   it('holds the usual invariants', () => {

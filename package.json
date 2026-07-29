@@ -1,6 +1,6 @@
 {
   "name": "prettier-plugin-auto-sort-imports",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Zero-config Prettier plugin that sorts and groups imports with blank lines between groups. Discovers your tsconfig/jsconfig path aliases automatically - no regex configuration. Works with TypeScript and JavaScript, frontend and backend.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
