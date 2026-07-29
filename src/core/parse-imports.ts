@@ -61,6 +61,35 @@ function pluginLadder(filepath: string | undefined, parser: string | undefined):
   return ladder.map((plugins) => [...plugins, ...BASE_PLUGINS])
 }
 
+/**
+ * Strict parse check, used to validate output before handing it back.
+ *
+ * Reordering whole statements is provably safe, but rewriting an import clause
+ * to drop unused bindings edits the statement itself. Verifying the result here
+ * means a defect in that path can only ever leave the file untouched.
+ */
+export function isParseable(
+  code: string,
+  filepath: string | undefined,
+  parser: string | undefined,
+): boolean {
+  for (const plugins of pluginLadder(filepath, parser)) {
+    try {
+      parse(code, {
+        sourceType: 'module',
+        allowReturnOutsideFunction: true,
+        allowSuperOutsideMethod: true,
+        allowUndeclaredExports: true,
+        plugins,
+      })
+      return true
+    } catch {
+      // Try the next dialect.
+    }
+  }
+  return false
+}
+
 function isAtLineStart(code: string, pos: number): boolean {
   for (let i = pos - 1; i >= 0; i--) {
     const char = code[i]
@@ -241,10 +270,17 @@ export function parseImports(
     const defaultNode = allSpecifiers.find((s) => s.type === 'ImportDefaultSpecifier')
     const namespaceNode = allSpecifiers.find((s) => s.type === 'ImportNamespaceSpecifier')
 
-    const clauseStart = allSpecifiers.reduce<number | null>(
+    const firstSpecifierStart = allSpecifiers.reduce<number | null>(
       (min, s) => (min === null || s.start < min ? s.start : min),
       null,
     )
+    // The opening brace has to be inside the clause. Named specifiers start
+    // *after* it, so anchoring on the first specifier would leave the original
+    // `{` in place and emit a second one when the clause is rebuilt.
+    const clauseStart =
+      named && firstSpecifierStart !== null
+        ? Math.min(firstSpecifierStart, named.range.start)
+        : firstSpecifierStart
     const clauseEnd = named
       ? named.range.end
       : allSpecifiers.reduce<number | null>((max, s) => (max === null || s.end > max ? s.end : max), null)

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { sortImports } from '../src/preprocess'
-import { NEST_FILE, REACT_FILE, assertParses, collectImports } from './helpers'
+import {
+  NEST_FILE,
+  REACT_FILE,
+  assertParses,
+  collectImportBindings,
+  collectImports,
+} from './helpers'
 
 /**
  * A broad corpus of shapes the plugin must survive. The assertions below are
@@ -94,6 +100,50 @@ for (const filepath of FILES) {
     })
   })
 }
+
+/**
+ * The corpus above runs with default options, which leaves `removeUnused` off -
+ * and that is exactly how a clause-rewriting bug shipped unnoticed. The whole
+ * corpus is replayed here with the option on.
+ *
+ * "No import is lost" cannot hold in this mode, since removing imports is the
+ * point. The properties that must still hold are: the output parses, nothing is
+ * added or altered, and formatting is stable.
+ */
+describe('invariants with unused-import removal enabled', () => {
+  const run = (code: string) =>
+    sortImports(code, {
+      filepath: REACT_FILE,
+      parser: 'typescript',
+      sortImportsRemoveUnused: true,
+    })
+
+  it.each(Object.entries(CORPUS))('%s: output still parses', (_name, code) => {
+    if (code.includes('broken')) return
+    expect(() => assertParses(run(code))).not.toThrow()
+  })
+
+  it.each(Object.entries(CORPUS))('%s: no binding is added or altered', (_name, code) => {
+    if (code.includes('broken')) return
+    const before = new Set(collectImportBindings(code))
+    for (const binding of collectImportBindings(run(code))) {
+      expect(before.has(binding)).toBe(true)
+    }
+  })
+
+  it.each(Object.entries(CORPUS))('%s: side-effect imports are never removed', (_name, code) => {
+    if (code.includes('broken')) return
+    const sideEffects = (value: string) =>
+      collectImportBindings(value).filter((entry) => entry.endsWith('|side-effect'))
+
+    expect(sideEffects(run(code))).toEqual(sideEffects(code))
+  })
+
+  it.each(Object.entries(CORPUS))('%s: formatting is idempotent', (_name, code) => {
+    const once = run(code)
+    expect(run(once)).toBe(once)
+  })
+})
 
 describe('safety', () => {
   it('returns the input when the pragma disables the plugin', () => {

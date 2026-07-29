@@ -2,18 +2,52 @@ import path from 'path'
 
 import { describe, expect, it } from 'vitest'
 
+import { isParseable } from '../src/core/parse-imports'
 import { sortImports } from '../src/preprocess'
 import { NEST_FILE, REACT_FILE, assertParses } from './helpers'
 
-const prune = (code: string, extra: Record<string, unknown> = {}) =>
-  sortImports(code, {
+/**
+ * Every case in this file asserts the result parses, not just that some string
+ * is present or absent.
+ *
+ * The original version of these tests checked substrings only, and happily
+ * passed while the plugin emitted `import { { kept } from 'zzz'` - the text
+ * contained "kept" and did not contain "dropped", so both assertions held on
+ * output that no parser would accept. Rewriting a clause is the one path that
+ * edits a statement, so parseability is the assertion that matters.
+ */
+const prune = (code: string, extra: Record<string, unknown> = {}) => {
+  const out = sortImports(code, {
     filepath: REACT_FILE,
     parser: 'typescript',
     sortImportsRemoveUnused: true,
     ...extra,
   })
+  assertParses(out)
+  return out
+}
 
 describe('removing unused imports', () => {
+  it('rebuilds a named-only import without emitting a second brace', () => {
+    // Regression: the clause was anchored on the first specifier, which sits
+    // *after* the opening brace, so rebuilding produced `import { { a } from`.
+    const code =
+      "import { withCost, GoogleAdsMetricsData, DEFAULT_LIMIT } from './metrics'\n\nexport default [withCost, DEFAULT_LIMIT]\n"
+
+    expect(prune(code)).toBe(
+      "import { withCost, DEFAULT_LIMIT } from './metrics'\n\nexport default [withCost, DEFAULT_LIMIT]\n",
+    )
+  })
+
+  it('rebuilds a multiline named-only import', () => {
+    const code =
+      "import {\n  withCost,\n  GoogleAdsMetricsData,\n  DEFAULT_LIMIT,\n} from './metrics'\n\nexport default [withCost, DEFAULT_LIMIT]\n"
+
+    expect(prune(code)).toBe(
+      "import { withCost, DEFAULT_LIMIT } from './metrics'\n\nexport default [withCost, DEFAULT_LIMIT]\n",
+    )
+  })
+
   it('is off unless explicitly enabled', () => {
     const code = "import unused from 'zzz'\nimport used from 'aaa'\n\nexport default used\n"
     expect(sortImports(code, { filepath: REACT_FILE })).toContain("'zzz'")
@@ -138,7 +172,14 @@ describe('removal safety gates', () => {
 
   it('leaves an unparseable file alone', () => {
     const code = "import a from 'a'\n\nfunction ( { ] broken\n"
-    expect(prune(code)).toBe(code)
+    // Not via `prune`: the input never parsed, so neither can the output.
+    const out = sortImports(code, {
+      filepath: REACT_FILE,
+      parser: 'typescript',
+      sortImportsRemoveUnused: true,
+    })
+
+    expect(out).toBe(code)
   })
 
   it('keeps an import whose comment lives inside the declaration', () => {
@@ -147,6 +188,13 @@ describe('removal safety gates', () => {
 
     expect(out).toContain('// note')
     expect(out).toContain('dropped')
+  })
+
+  it('the output guard rejects code that does not parse', () => {
+    // The guard behind the clause rewrite: if a future defect produces broken
+    // output, `sortImports` returns the original instead of shipping it.
+    expect(isParseable("import { a } from 'x'\n", '/tmp/a.ts', 'typescript')).toBe(true)
+    expect(isParseable("import { { a } from 'x'\n", '/tmp/a.ts', 'typescript')).toBe(false)
   })
 
   it('stays idempotent', () => {
